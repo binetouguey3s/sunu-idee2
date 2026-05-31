@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Sunu-Idees</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+
+        <header>
+        <h1>Sunu-Idees</h1>
+        <p>Le mur d'idees collaboratif de la promo P9</p>
+        </header>
+
+        <main>
+
+        <!--formulaire d'ajout d'idee -->
+        <section id="formulaire-section">
+            <h2>Proposer une idee</h2>
+            <form id="idee-form">
+                <input type="text" id="idea-title" placeholder="Titre de l'idee" required>
+
+                <select id="categorie">
+                    <option value="" disabled selected>Choisir une categorie</option>
+                    <option value="Pedagogie">Pedagogie</option>
+                    <option value="Evenement">Evenement</option>
+                    <option value="Vie de campus">Vie de campus</option>
+                    <option value="Amelioration technique">Amelioration technique</option>
+                </select>
+                <!--<input type="text" id="new-category" placeholder="Ajouter une nouvelle categorie (optionnel)">-->
+
+                <textarea id="description" placeholder="Description de l'idee" required></textarea> 
+                <button type="submit">Poster l'idee</button>
+            </form>
+        </section>
+
+        <!--Le mur des idees -->
+        <section id="mur-section">
+            <h2>Le mur des idees</h2>
+            <div id="mur">
+                <!-- Les idees seront affichees ici par JavaScript -->
+            </div>
+        </section>
+        </main>
+        
+        <script src="app.js"></script>
+    </body>
+</html>
