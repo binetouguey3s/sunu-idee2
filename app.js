@@ -5,11 +5,11 @@ const mur = document.getElementById('mur');
 let idees = [];
 
 // recuperer les idees depuis le localStorage au demarrrage
-const ideesStockees = localStorage.getItem('idees');
+const ideesStockees = localStorage.getItem('idees'); 
 
 if (ideesStockees !== null) {
     // convertir la chaine JSON en tableau d'idees
-    idees = JSON.parse(ideesStockees);
+    idees = JSON.parse(ideesStockees); 
 }
 else {
     // si aucune idee n'est stockee, tableau d'idees vide
@@ -56,7 +56,6 @@ function creerCarte(idee) {
 }
 
 //fonction: afficher les idees sur le mur
-
 function afficherIdees() {
     // vider le mur avant remplissage
     mur.innerHTML = '';
@@ -64,7 +63,7 @@ function afficherIdees() {
     // parcourir les idees et creer une carte pour chacune
     idees.forEach(idee => {
         const carte = creerCarte(idee);
-        mur.appendChild(carte);
+        mur.appendChild(carte); 
     });
 }
 
@@ -82,41 +81,92 @@ function genererId() {
     return Date.now(); 
 }
 
+
+
 // gestion de la soumission du formulaire
-form.addEventListener('submit', function(event) {
+form.addEventListener('submit', async function(event) {
     event.preventDefault(); // empecher le rechargement de la page
 
     // recuperer les valeurs des champs
     const titre = inputTitre.value.trim();
-    const categorie = selectCategorie.value;
     const description = textareaDescription.value.trim();
 
     // validation des champs
-    if (titre === '' || categorie === '' || description === '') {
+    if (titre === '' || description === '') {
         alert('Veuillez remplir tous les champs');
         return;
     }
 
-    // creer une nouvelle idee
-    const nouvelleIdee = {
-        id: genererId(),
-        titre: titre,
-        categorie: categorie,
-        description: description
-    };
+    const boutonSubmit= form.querySelector('button[type="submit"]'); // recuperer le bouton de soumission
+    const ancienTexte = boutonSubmit.textContent; // sauvegarder le texte original du bouton
 
-    // ajouter la nouvelle idee au tableau
-    idees.push(nouvelleIdee);
+        try {    
+            boutonSubmit.disabled = true; // desactiver le bouton pendant l'appel API
+            boutonSubmit.textContent = 'Veuillez patienter, generation de la categorie en cours...'; // changer le texte du bouton pour indiquer que la génération est en cours   
+        const categorieGeneree = await OllamaFetch(titre, description); // attendre la reponse de l'API avant de continuer
 
-    // sauvegarder les idees dans le localStorage
-    sauvegarderIdees();
+        // creer une nouvelle idee
+        const nouvelleIdee = {
+            id: genererId(),
+            titre: titre,
+            categorie: categorieGeneree,
+            description: description
+        }; 
 
-    // afficher les idees mises a jour
-    afficherIdees();
+            // ajouter la nouvelle idee au tableau  
+            idees.push(nouvelleIdee);
+            
+            // sauvegarder les idees mises a jour dans le localStorage
+            sauvegarderIdees();
+            // afficher les idees mises a jour
+            afficherIdees();
+            
+            // reinitialiser le formulaire
+            form.reset();
 
-    // reinitialiser le formulaire
-    form.reset();
+            alert(`Categorie generee par Ollama: ${categorieGeneree}`);
+    }
+    catch (error) {
+        console.error('Erreur lors de l\'appel à Ollama:', error);
+        alert('Une erreur est survenue lors de la génération de la categorie. Veuillez réessayer.');
+    }
+    finally {
+        boutonSubmit.disabled = false; // re-activer le bouton apres l'appel API
+        boutonSubmit.textContent = ancienTexte; // restaurer le texte original du bouton
+    }
 });
+
+
+
+
+
+    // Appel API Ollama avec async await
+        async function OllamaFetch(titre, description) {
+            const response = await fetch('http://localhost:11434/api/generate', { 
+                method: 'POST', // methode POST pour envoyer les données
+                headers: {
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({
+                    model: 'gemma2:latest',
+                    stream: false,
+                    prompt: `Tu es super intelligent et tu comprends tres vite. Je veux que tu choisis une categorie appropriee parmi : Pedagogie, Evenement, Vie de campus, Amelioration technique en te basant sur la description ou le titre suivant: Titre: ${titre}, Description: ${description} et tu me reponds uniquement par la categorie sans aucune explication`
+                })
+            });
+            
+            const data = await response.json(); // attendre la reponse et la convertir en JSON
+            let categorie = data.response.trim(); // recuperer la categorie generee et enlever les espaces superflus
+
+            const categoriesValides = ['Pedagogie', 'Evenement', 'Vie de campus', 'Amelioration technique'];
+            if (!categoriesValides.includes(categorie)) {
+                categorie= 'Pedagogie'; // valeur par defaut si la categorie generee n'est pas valide
+            }
+            return categorie; // retourner la categorie generee
+        }
+
+
+
+//fin de mon debut ollama
 
 // gestion des clics sur les boutons supprimer
 mur.addEventListener('click', function(event) {
@@ -201,5 +251,6 @@ mur.addEventListener('click', function(event) {
 // Sauvegardons les idees dans le localStorage 
 function sauvegarderIdees() {
     // convertir le tableau d'idees en JSON et le stocker dans le localStorage
-    localStorage.setItem('idees', JSON.stringify(idees));
+    localStorage.setItem('idees', JSON.stringify(idees)); 
 }
+
