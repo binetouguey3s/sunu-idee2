@@ -141,7 +141,7 @@ form.addEventListener('submit', async function(event) {
 const supabaseUrl = "https://supabase.co"
 const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
 
-// const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // fin d'importation
 
 
@@ -163,7 +163,7 @@ const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
                     messages: [
                         {
                             role: 'user',
-                            content: `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique. Titre: ${titre}. Description: ${description}. Réponds uniquement par la catégorie.`
+                            content: `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique. Titre: ${titre}. Description: ${description}. Réponds uniquement par la catégorie qui correspond à celle appropriée au titre et la description donnée.`
                         }
                     ]
                 })
@@ -178,16 +178,6 @@ const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
                 text = (data.choices[0].message && data.choices[0].message.content) || data.choices[0].text || '';
             }
 
-            // text = text.trim();
-            // const textLower = text.toLowerCase();
-
-            // if (textLower.includes('pedagog')) return 'Pedagogie';
-            // if (textLower.includes('evenement') || textLower.includes('événement')) return 'Evenement';
-            // if (textLower.includes('campus')) return 'Vie de campus';
-            // if (textLower.includes('amelior') || textLower.includes('amélior')) return 'Amelioration technique';
-
-            // // Si l'API ne renvoie rien de clair, utiliser la catégorie par défaut
-            // return 'Pedagogie';
         }
         catch (err) {
             console.error('Erreur openRouterFetch :', err);
