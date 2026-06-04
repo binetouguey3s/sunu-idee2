@@ -135,13 +135,16 @@ form.addEventListener('submit', async function(event) {
         boutonSubmit.textContent = ancienTexte; // restaurer le texte original du bouton
     }
 });
-
+import { createClient } from '@supabase/supabase-js'
 // Si on utilise Supabase via le CDN, ne pas importer un module ici.
 // Le script CDN ajoute un objet global `supabase`.
-const supabaseUrl = "https://azeigwyrplqnnkrfxvuw.supabase.co"
-const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
+const supabase = createClient('https://azeigwyrplqnnkrfxvuw.supabase.co', 'sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1')
 
-//const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// const supabaseUrl = "https://azeigwyrplqnnkrfxvuw.supabase.co"
+// const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
+
+
 // fin d'importation
 
 
