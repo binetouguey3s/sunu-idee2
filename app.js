@@ -141,7 +141,7 @@ form.addEventListener('submit', async function(event) {
 const supabaseUrl = "https://supabase.co"
 const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
 
-//const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // fin d'importation
 
 
