@@ -138,7 +138,7 @@ form.addEventListener('submit', async function(event) {
 
 // Si on utilise Supabase via le CDN, ne pas importer un module ici.
 // Le script CDN ajoute un objet global `supabase`.
-const supabaseUrl = "https://supabase.co"
+const supabaseUrl = "https://azeigwyrplqnnkrfxvuw.supabase.co"
 const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
 
 //const supabase = createClient(supabaseUrl, supabaseAnonKey)
