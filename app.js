@@ -88,6 +88,7 @@ form.addEventListener('submit', async function(event) {
     // recuperer les valeurs des champs
     const titre = inputTitre.value.trim();
     const description = textareaDescription.value.trim();
+    const categorieSelectionnee = selectCategorie.value;
 
     // validation des champs
     if (titre === '' || description === '') {
@@ -98,16 +99,18 @@ form.addEventListener('submit', async function(event) {
     const boutonSubmit = form.querySelector('button[type="submit"]'); // recuperer le bouton de soumission
     const ancienTexte = boutonSubmit.textContent; // sauvegarder le texte original du bouton
 
-    try {    
+    try {
         boutonSubmit.disabled = true; // desactiver le bouton pendant l'appel API
-        boutonSubmit.textContent = 'Veuillez patienter, generation de la categorie en cours...'; // changer le texte du bouton pour indiquer que la génération est en cours   
-        const categorieGeneree = await openRouterFetch(titre, description); // attendre la reponse de l'API avant de continuer
+        boutonSubmit.textContent = 'Veuillez patienter, generation de la categorie en cours...'; // changer le texte du bouton pour indiquer que la génération est en cours
+
+        const categorieGeneree = categorieSelectionnee || await openRouterFetch(titre, description);
+        const categorieFinale = categorieGeneree || 'Pedagogie';
 
         // creer une nouvelle idee
         const nouvelleIdee = {
             id: genererId(),
             titre: titre,
-            categorie: categorieGeneree,
+            categorie: categorieFinale,
             description: description
         }; 
 
@@ -133,13 +136,12 @@ form.addEventListener('submit', async function(event) {
     }
 });
 
-// importation de supabase
-import { createClient } from "@supabase/supabase-js"
-
+// Si on utilise Supabase via le CDN, ne pas importer un module ici.
+// Le script CDN ajoute un objet global `supabase`.
 const supabaseUrl = "https://supabase.co"
 const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey) 
+// const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // fin d'importation
 
 
@@ -176,20 +178,20 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
                 text = (data.choices[0].message && data.choices[0].message.content) || data.choices[0].text || '';
             }
 
-            // text = text.toLowerCase();
+            // text = text.trim();
+            // const textLower = text.toLowerCase();
 
-            // // Vérifier la présence de mots-clés simples
-            // if (text.includes('pedagog')) return 'Pedagogie';
-            // if (text.includes('evenement') || text.includes('événement')) return 'Evenement';
-            // if (text.includes('campus')) return 'Vie de campus';
-            // if (text.includes('amelior') || text.includes('amélior')) return 'Amelioration technique';
+            // if (textLower.includes('pedagog')) return 'Pedagogie';
+            // if (textLower.includes('evenement') || textLower.includes('événement')) return 'Evenement';
+            // if (textLower.includes('campus')) return 'Vie de campus';
+            // if (textLower.includes('amelior') || textLower.includes('amélior')) return 'Amelioration technique';
 
-            // // Par défaut
+            // // Si l'API ne renvoie rien de clair, utiliser la catégorie par défaut
             // return 'Pedagogie';
         }
         catch (err) {
             console.error('Erreur openRouterFetch :', err);
-            return 'Erreur, reessayer!';
+            return 'Erreur , reessayer svp !';
         }
     }
         //  debut open router
