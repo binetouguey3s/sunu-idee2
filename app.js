@@ -133,7 +133,7 @@ form.addEventListener('submit', async function(event) {
     }
 });
 
-    // Appel API OpenRouter - version simple et lisible pour débutant
+    // Appel API OpenRouter 
     async function openRouterFetch(titre, description) {
         try {
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -159,7 +159,7 @@ form.addEventListener('submit', async function(event) {
             const data = await response.json();
             console.log('openrouter response', data);
 
-            // Récupérer le texte retourné par le modèle (simple)
+            // Récupérer le texte retourné par le modèle 
             let text = '';
             if (data.choices && data.choices[0]) {
                 text = (data.choices[0].message && data.choices[0].message.content) || data.choices[0].text || '';
