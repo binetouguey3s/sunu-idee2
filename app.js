@@ -133,6 +133,16 @@ form.addEventListener('submit', async function(event) {
     }
 });
 
+// importation de supabase
+import { createClient } from "@supabase/supabase-js"
+
+const supabaseUrl = "https://supabase.co"
+const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey) 
+// fin d'importation
+
+
     // Appel API OpenRouter 
     async function openRouterFetch(titre, description) {
         try {
@@ -142,10 +152,11 @@ form.addEventListener('submit', async function(event) {
                     'Content-Type': 'application/json',
                     // Ne jamais laisser de clé secrète en dur dans le code client.
                     // Remplacez par un proxy côté serveur ou un endpoint /api/classify.
-                    'Authorization': 'Bearer OPENROUTER_API_KEY'
+                    'Authorization': 'Bearer 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'
                 },
                 body: JSON.stringify({
-                    model: 'poolside/laguna-m.1:free',
+                    // model: 'poolside/laguna-m.1:free',
+                    model: 'mistralai/mistral-7b-instruct:free',
                     stream: false,
                     messages: [
                         {
@@ -165,61 +176,25 @@ form.addEventListener('submit', async function(event) {
                 text = (data.choices[0].message && data.choices[0].message.content) || data.choices[0].text || '';
             }
 
-            text = text.toLowerCase();
+            // text = text.toLowerCase();
 
-            // Vérifier la présence de mots-clés simples
-            if (text.includes('pedagog')) return 'Pedagogie';
-            if (text.includes('evenement') || text.includes('événement')) return 'Evenement';
-            if (text.includes('campus')) return 'Vie de campus';
-            if (text.includes('amelior') || text.includes('amélior')) return 'Amelioration technique';
+            // // Vérifier la présence de mots-clés simples
+            // if (text.includes('pedagog')) return 'Pedagogie';
+            // if (text.includes('evenement') || text.includes('événement')) return 'Evenement';
+            // if (text.includes('campus')) return 'Vie de campus';
+            // if (text.includes('amelior') || text.includes('amélior')) return 'Amelioration technique';
 
-            // Par défaut
-            return 'Pedagogie';
+            // // Par défaut
+            // return 'Pedagogie';
         }
         catch (err) {
             console.error('Erreur openRouterFetch :', err);
-            return 'Nous sommes desolée de ne pas vous fournir une categorie';
+            return 'Erreur, reessayer!';
         }
     }
-    
-
         //  debut open router
-
-    // testme
-    const prompt = `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique. Titre: ${titre}. Description: ${description}. Réponds uniquement par la catégorie.`
-        return prompt
-    // testme fin
-
-/// test pour forcer le modele    a vercel      
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  try {
-    const { titre, description } = req.body || {};
-    if (!titre || !description) return res.status(400).json({ error: 'Missing titre or description' });
-
-    const prompt = `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique.\nTitre: ${titre}\nDescription: ${description}\nRéponds uniquement par la catégorie (ex: Pedagogie).`;
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`
-      },
-      body: JSON.stringify({ model: process.env.OPENROUTER_MODEL || 'mistralai/mistral-7b-instruct:free', stream: false, messages: [{ role: 'user', content: prompt }] })
-    });
-
-    const data = await response.json();
-    return res.status(200).json({ data });
-  } catch (err) {
-    console.error('OpenRouter proxy error', err);
-    return res.status(500).json({ error: 'openrouter_error' });
-  }
-}
-
-///test model fin
+//test model fin
 // fin de mon debut ollama
-
-
 
 
 // gestion des clics sur les boutons supprimer
