@@ -1,20 +1,15 @@
+// url et cle depuis supabase
+const supabaseUrl = "https://azeigwyrplqnnkrfxvuw.supabase.co"
+const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
+
+const client = supabase.createClient(supabaseUrl, supabaseAnonKey)
+console.log(client)
+
 // Recuperons les elements du DOM
 const mur = document.getElementById('mur');
 
 // tableau pour stocker les idees
 let idees = [];
-
-// recuperer les idees depuis le localStorage au demarrrage
-const ideesStockees = localStorage.getItem('idees'); 
-
-if (ideesStockees !== null) {
-    // convertir la chaine JSON en tableau d'idees
-    idees = JSON.parse(ideesStockees); 
-}
-else {
-    // si aucune idee n'est stockee, tableau d'idees vide
-    idees = [];
-}
 
 // fonction: trouver la classe css selon la categorie 
 
@@ -30,6 +25,60 @@ function getCategorieClass(categorie) {
             return 'cat-amelioration';
         default:
             return 'cat-pedagogie';
+    }
+}
+
+//nettoyer la fonction categorie
+function nettoyerCategorieRaw(texte) {
+    if (!texte || typeof texte !== 'string') return null;
+    const clean = texte.normalize('NFD').replace(/\p{Diacritic}/gu, '').trim().toLowerCase();
+
+    if (/pedagogie|pedago|enseignement|education/.test(clean)) return 'Pedagogie';
+    if (/evenement|evenement|event|even|celebration/.test(clean)) return 'Evenement';
+    if (/vie de campus|campus|universite|etudiant|etudiante/.test(clean)) return 'Vie de campus';
+    if (/amelioration technique|amelioration|technique|ameliorer|ameliore/.test(clean)) return 'Amelioration technique';
+
+    return null;
+}
+
+// chercher l'idee 
+async function fetchIdees() {
+    const { data, error } = await client.from('idees').select('*').order('id', { ascending: false });
+    if (error) {
+        console.error('Erreur Supabase fetch:', error);
+        mur.innerHTML = '<p class="erreur">Impossible de charger les idées depuis Supabase.</p>';
+        return;
+    }
+
+    idees = data || [];
+    afficherIdees();
+}
+
+//  creer idee depuis supabase
+async function creerIdeeSupabase(idee) {
+    const { data, error } = await client.from('idees').insert([idee]).select().single();
+    if (error) {
+        console.error('Erreur Supabase insert:', error);
+        throw error;
+    }
+    return data;
+}
+
+// mettre a jour l'idee 
+async function updateIdeeSupabase(id, updates) {
+    const { data, error } = await client.from('idees').update(updates).eq('id', id).select().single();
+    if (error) {
+        console.error('Erreur Supabase update:', error);
+        throw error;
+    }
+    return data;
+}
+
+async function supprimerIdeeSupabase(id) {
+    const { error } = await client.from('idees').delete().eq('id', id);
+    if (error) {
+        console.error('Erreur Supabase delete:', error);
+        throw error;
     }
 }
 
@@ -54,6 +103,7 @@ function creerCarte(idee) {
     `;
     return carte;
 }
+
 
 //fonction: afficher les idees sur le mur
 function afficherIdees() {
@@ -135,15 +185,6 @@ form.addEventListener('submit', async function(event) {
         boutonSubmit.textContent = ancienTexte; // restaurer le texte original du bouton
     }
 });
-import { createClient } from '@supabase/supabase-js'
-// Si on utilise Supabase via le CDN, ne pas importer un module ici.
-// Le script CDN ajoute un objet global `supabase`.
-const supabase = createClient('https://azeigwyrplqnnkrfxvuw.supabase.co', 'sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1')
-
-// const supabase = createClient(supabaseUrl, supabaseAnonKey)
-// const supabaseUrl = "https://azeigwyrplqnnkrfxvuw.supabase.co"
-// const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
-
 
 // fin d'importation
 
