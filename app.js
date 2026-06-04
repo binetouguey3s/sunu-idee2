@@ -152,7 +152,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
                     'Content-Type': 'application/json',
                     // Ne jamais laisser de clé secrète en dur dans le code client.
                     // Remplacez par un proxy côté serveur ou un endpoint /api/classify.
-                    'Authorization': 'Bearer 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'
+                    'Authorization': 'Bearer OPENROUTER_API_KEY'
                 },
                 body: JSON.stringify({
                     // model: 'poolside/laguna-m.1:free',
