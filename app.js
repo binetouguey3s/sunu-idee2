@@ -81,8 +81,6 @@ function genererId() {
     return Date.now(); 
 }
 
-
-
 // gestion de la soumission du formulaire
 form.addEventListener('submit', async function(event) {
     event.preventDefault(); // empecher le rechargement de la page
@@ -97,13 +95,13 @@ form.addEventListener('submit', async function(event) {
         return;
     }
 
-    const boutonSubmit= form.querySelector('button[type="submit"]'); // recuperer le bouton de soumission
+    const boutonSubmit = form.querySelector('button[type="submit"]'); // recuperer le bouton de soumission
     const ancienTexte = boutonSubmit.textContent; // sauvegarder le texte original du bouton
 
-        try {    
-            boutonSubmit.disabled = true; // desactiver le bouton pendant l'appel API
-            boutonSubmit.textContent = 'Veuillez patienter, generation de la categorie en cours...'; // changer le texte du bouton pour indiquer que la génération est en cours   
-        const categorieGeneree = await OllamaFetch(titre, description); // attendre la reponse de l'API avant de continuer
+    try {    
+        boutonSubmit.disabled = true; // desactiver le bouton pendant l'appel API
+        boutonSubmit.textContent = 'Veuillez patienter, generation de la categorie en cours...'; // changer le texte du bouton pour indiquer que la génération est en cours   
+        const categorieGeneree = await openRouterFetch(titre, description); // attendre la reponse de l'API avant de continuer
 
         // creer une nouvelle idee
         const nouvelleIdee = {
@@ -113,21 +111,20 @@ form.addEventListener('submit', async function(event) {
             description: description
         }; 
 
-            // ajouter la nouvelle idee au tableau  
-            idees.push(nouvelleIdee);
-            
-            // sauvegarder les idees mises a jour dans le localStorage
-            sauvegarderIdees();
-            // afficher les idees mises a jour
-            afficherIdees();
-            
-            // reinitialiser le formulaire
-            form.reset();
+        // ajouter la nouvelle idee au tableau  
+        idees.push(nouvelleIdee);
 
-            alert(`Categorie generee par Ollama: ${categorieGeneree}`);
+        sauvegarderIdees();
+
+        afficherIdees();
+        
+        // reinitialiser le formulaire
+        form.reset();
+
+        alert(`Categorie generee par OpenRouter: ${categorieGeneree}`);
     }
     catch (error) {
-        console.error('Erreur lors de l\'appel à Ollama:', error);
+        console.error('Erreur lors de l\'appel à openRouter:', error);
         alert('Une erreur est survenue lors de la génération de la categorie. Veuillez réessayer.');
     }
     finally {
@@ -136,37 +133,60 @@ form.addEventListener('submit', async function(event) {
     }
 });
 
-
-
-
-
-    // Appel API Ollama avec async await
-        async function OllamaFetch(titre, description) {
-            const response = await fetch('http://localhost:11434/api/generate', { 
-                method: 'POST', // methode POST pour envoyer les données
+    // Appel API OpenRouter - version simple et lisible pour débutant
+    async function openRouterFetch(titre, description) {
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json' 
+                    'Content-Type': 'application/json',
+                    // Ne jamais laisser de clé secrète en dur dans le code client.
+                    // Remplacez par un proxy côté serveur ou un endpoint /api/classify.
+                    'Authorization': 'Bearer YOUR_OPENROUTER_API_KEY'
                 },
                 body: JSON.stringify({
-                    model: 'gemma2:latest',
+                    model: 'poolside/laguna-m.1:free',
                     stream: false,
-                    prompt: `Tu es super intelligent et tu comprends tres vite. Je veux que tu choisis une categorie appropriee parmi : Pedagogie, Evenement, Vie de campus, Amelioration technique en te basant sur la description ou le titre suivant: Titre: ${titre}, Description: ${description} et tu me reponds uniquement par la categorie sans aucune explication`
+                    messages: [
+                        {
+                            role: 'user',
+                            content: `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique. Titre: ${titre}. Description: ${description}. Réponds uniquement par la catégorie.`
+                        }
+                    ]
                 })
             });
-            
-            const data = await response.json(); // attendre la reponse et la convertir en JSON
-            let categorie = data.response.trim(); // recuperer la categorie generee et enlever les espaces superflus
 
-            const categoriesValides = ['Pedagogie', 'Evenement', 'Vie de campus', 'Amelioration technique'];
-            if (!categoriesValides.includes(categorie)) {
-                categorie= 'Pedagogie'; // valeur par defaut si la categorie generee n'est pas valide
+            const data = await response.json();
+            console.log('openrouter response', data);
+
+            // Récupérer le texte retourné par le modèle (simple)
+            let text = '';
+            if (data.choices && data.choices[0]) {
+                text = (data.choices[0].message && data.choices[0].message.content) || data.choices[0].text || '';
             }
-            return categorie; // retourner la categorie generee
+
+            text = text.toLowerCase();
+
+            // Vérifier la présence de mots-clés simples
+            if (text.includes('pedagog')) return 'Pedagogie';
+            if (text.includes('evenement') || text.includes('événement')) return 'Evenement';
+            if (text.includes('campus')) return 'Vie de campus';
+            if (text.includes('amelior') || text.includes('amélior')) return 'Amelioration technique';
+
+            // Par défaut
+            return 'Pedagogie';
         }
+        catch (err) {
+            console.error('Erreur openRouterFetch :', err);
+            return 'Pedagogie';
+        }
+    }
+    
 
+        //  debut open router
 
+// fin de mon debut ollama
 
-//fin de mon debut ollama
 
 // gestion des clics sur les boutons supprimer
 mur.addEventListener('click', function(event) {
@@ -253,4 +273,3 @@ function sauvegarderIdees() {
     // convertir le tableau d'idees en JSON et le stocker dans le localStorage
     localStorage.setItem('idees', JSON.stringify(idees)); 
 }
-

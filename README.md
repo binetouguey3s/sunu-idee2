@@ -2,8 +2,10 @@
 
 Sunu-Idees est une petite application web de mur d'idees collaboratif pour la promo P9. Elle permet de proposer, afficher, modifier et supprimer des idees directement dans le navigateur.
 
-## Lien du projet deploye
-- https://sunu-idees-sandy.vercel.app/
+## Lien du projet deploye et GitHub
+- https://sunu-idees-sandy.vercel.app/ 
+
+- https://github.com/binetouguey3s/sunu-idees
 
 ## Fonctionnalites realisees
 
@@ -22,6 +24,8 @@ Sunu-Idees est une petite application web de mur d'idees collaboratif pour la pr
 - Modification d'une idee directement depuis sa carte.
 - Annulation possible pendant la modification.
 - Mise en page responsive pour une meilleure lecture sur mobile.
+- Ajout du modele poolside/laguna-m.1:free 
+- Le modele sert pour generer une categorie selon le titre et la description données
 
 ## Structure des fichiers
 
