@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     const { titre, description } = req.body || {};
     if (!titre || !description) return res.status(400).json({ error: 'Missing titre or description' });
 
-    const prompt = `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique.\nTitre: ${titre}\nDescription: ${description}\nRéponds uniquement par la catégorie (ex: Pedagogie).`;
+    const prompt = `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique.\nTitre: ${titre}\nDescription: ${description}\nRéponds uniquement par la catégorie qui correspond à celle appropriée au titre et la description donnée.`;
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
