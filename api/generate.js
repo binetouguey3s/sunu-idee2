@@ -14,10 +14,14 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`
       },
-      body: JSON.stringify({ model: process.env.OPENROUTER_MODEL || 'mistralai/mistral-7b-instruct:free ', stream: false, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: process.env.OPENROUTER_MODEL || 'mistralai/mistral-7b-instruct:free', stream: false, messages: [{ role: 'user', content: prompt }] })
     });
 
     const data = await response.json();
+    if (!response.ok) {
+      console.error('OpenRouter returned error', response.status, data);
+      return res.status(response.status).json({ error: data.error || data });
+    }
     return res.status(200).json({ data });
   } catch (err) {
     console.error('OpenRouter proxy error', err);

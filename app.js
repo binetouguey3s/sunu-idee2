@@ -1,6 +1,6 @@
 // url et cle depuis supabase
 const supabaseUrl = "https://azeigwyrplqnnkrfxvuw.supabase.co"
-const supabaseAnonKey = "sb_secret_qHoP1bEqn_0Cs1lj8HA_wQ_opC312V1"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWlnd3lycGxxbm5rcmZ4dnV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MjkyNzQsImV4cCI6MjA5NjEwNTI3NH0.zjmj8XT2oNJegWzfv20qidpVhgMhp35Zp3FHlsekLN0"
 
 const client = supabase.createClient(supabaseUrl, supabaseAnonKey)
 console.log(client)
@@ -39,6 +39,10 @@ function nettoyerCategorieRaw(texte) {
     if (/amelioration technique|amelioration|technique|ameliorer|ameliore/.test(clean)) return 'Amelioration technique';
 
     return null;
+}
+
+function normaliserCategorieRetournee(categorie) {
+    return nettoyerCategorieRaw(categorie);
 }
 
 // chercher l'idee 
@@ -117,19 +121,14 @@ function afficherIdees() {
     });
 }
 
-// affichage initial des idees
-afficherIdees();
+// affichage initial des idees depuis Supabase
+fetchIdees();
 
 //recuperons les champs du formulaire
 const form = document.getElementById('idee-form');
 const inputTitre = document.getElementById('idea-title');
 const selectCategorie = document.getElementById('categorie');
 const textareaDescription = document.getElementById('description');
-
-// fonction: generer un id unique
-function genererId() {
-    return Date.now(); 
-}
 
 // gestion de la soumission du formulaire
 form.addEventListener('submit', async function(event) {
@@ -153,22 +152,19 @@ form.addEventListener('submit', async function(event) {
         boutonSubmit.disabled = true; // desactiver le bouton pendant l'appel API
         boutonSubmit.textContent = 'Veuillez patienter, generation de la categorie en cours...'; // changer le texte du bouton pour indiquer que la génération est en cours
 
-        const categorieGeneree = categorieSelectionnee || await openRouterFetch(titre, description);
-        const categorieFinale = categorieGeneree || 'Pedagogie';
+        const categorieGenereeBrute = await openRouterFetch(titre, description);
+        const categorieGeneree = normaliserCategorieRetournee(categorieGenereeBrute);
+        const categorieFinale = categorieGeneree || categorieSelectionnee || 'Pedagogie';
 
-        // creer une nouvelle idee
+        // creer une nouvelle idee dans Supabase
         const nouvelleIdee = {
-            id: genererId(),
             titre: titre,
             categorie: categorieFinale,
             description: description
-        }; 
+        };
 
-        // ajouter la nouvelle idee au tableau  
-        idees.push(nouvelleIdee);
-
-        sauvegarderIdees();
-
+        const ideeEnregistree = await creerIdeeSupabase(nouvelleIdee);
+        idees.unshift(ideeEnregistree);
         afficherIdees();
         
         // reinitialiser le formulaire
@@ -192,40 +188,37 @@ form.addEventListener('submit', async function(event) {
     // Appel API OpenRouter 
     async function openRouterFetch(titre, description) {
         try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    // Ne jamais laisser de clé secrète en dur dans le code client.
-                    // Remplacez par un proxy côté serveur ou un endpoint /api/classify.
-                    'Authorization': 'Bearer OPENROUTER_API_KEY'
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    // model: 'poolside/laguna-m.1:free',
-                    model: 'mistralai/mistral-7b-instruct:free',
-                    stream: false,
-                    messages: [
-                        {
-                            role: 'user',
-                            content: `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique. Titre: ${titre}. Description: ${description}. Réponds uniquement par la catégorie qui correspond à celle appropriée au titre et la description donnée.`
-                        }
-                    ]
-                })
+                body: JSON.stringify({ titre, description })
             });
 
-            const data = await response.json();
+            const result = await response.json();
+            if (!response.ok) {
+                console.error('Proxy OpenRouter error', response.status, result);
+                return null;
+            }
+            if (result.error) {
+                console.error('Proxy OpenRouter returned error', result.error);
+                return null;
+            }
+
+            const data = result.data;
             console.log('openrouter response', data);
 
-            // Récupérer le texte retourné par le modèle 
             let text = '';
-            if (data.choices && data.choices[0]) {
+            if (data && data.choices && data.choices[0]) {
                 text = (data.choices[0].message && data.choices[0].message.content) || data.choices[0].text || '';
             }
 
+            return text.trim();
         }
         catch (err) {
             console.error('Erreur openRouterFetch :', err);
-            return 'Erreur , reessayer svp !';
+            return null;
         }
     }
         //  debut open router
@@ -234,7 +227,7 @@ form.addEventListener('submit', async function(event) {
 
 
 // gestion des clics sur les boutons supprimer
-mur.addEventListener('click', function(event) {
+mur.addEventListener('click', async function(event) {
 
     // recuperer l'element cible du clic
     const cible = event.target;
@@ -248,14 +241,13 @@ mur.addEventListener('click', function(event) {
 
         const confirmSuppression = confirm('Voulez-vous vraiment supprimer cette idée ?');
         if (confirmSuppression) {
-            // supprimer l'idee du tableau
-            idees = idees.filter(idee => idee.id !== id);
-
-            // sauvegarder les idees mises a jour dans le localStorage
-            sauvegarderIdees();
-
-            // afficher les idees mises a jour
-            afficherIdees();
+            try {
+                await supprimerIdeeSupabase(id);
+                idees = idees.filter(idee => idee.id !== id);
+                afficherIdees();
+            } catch (error) {
+                alert('Erreur lors de la suppression. Veuillez réessayer.');
+            }
         }
     }
 
@@ -277,7 +269,7 @@ mur.addEventListener('click', function(event) {
         `;
 
         // gestion du clic sur le bouton enregistrer
-        carte.querySelector('.btn-sauvegarder').addEventListener('click', function() {
+        carte.querySelector('.btn-sauvegarder').addEventListener('click', async function() {
             const nouveauTitre = carte.querySelector('.edit-titre').value.trim();
             const nouvelleDescription = carte.querySelector('.edit-description').value.trim();
 
@@ -286,23 +278,25 @@ mur.addEventListener('click', function(event) {
                 return;
             }
 
-            // mettre a jour l'idee dans le tableau
-            idees = idees.map(idee => {
-                if (idee.id === id) {
-                    return {
-                        ...idee, 
-                        titre: nouveauTitre,
-                        description: nouvelleDescription
-                    };
-                }
-                return idee;
-            });
-
-            // sauvegarder les idees mises a jour dans le localStorage
-            sauvegarderIdees();
-
-            // Afficher les idees mises a jour
-            afficherIdees();
+            try {
+                await updateIdeeSupabase(id, {
+                    titre: nouveauTitre,
+                    description: nouvelleDescription
+                });
+                idees = idees.map(idee => {
+                    if (idee.id === id) {
+                        return {
+                            ...idee,
+                            titre: nouveauTitre,
+                            description: nouvelleDescription
+                        };
+                    }
+                    return idee;
+                });
+                afficherIdees();
+            } catch (error) {
+                alert('Erreur lors de la mise à jour. Veuillez réessayer.');
+            }
         });
         
         // gestion du clic sur le bouton annuler
@@ -312,9 +306,3 @@ mur.addEventListener('click', function(event) {
         });
     }
 });
-
-// Sauvegardons les idees dans le localStorage 
-function sauvegarderIdees() {
-    // convertir le tableau d'idees en JSON et le stocker dans le localStorage
-    localStorage.setItem('idees', JSON.stringify(idees)); 
-}
