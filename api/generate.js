@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({ model: process.env.OPENROUTER_MODEL || 'mistralai/mistral-7b-instruct:free', stream: false, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: process.env.OPENROUTER_MODEL || 'poolside/laguna-m.1:free', stream: false, messages: [{ role: 'user', content: prompt }] })
     });
 
     const data = await response.json();
