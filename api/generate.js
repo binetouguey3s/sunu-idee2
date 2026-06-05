@@ -6,13 +6,19 @@ export default async function handler(req, res) {
     const { titre, description } = req.body || {};
     if (!titre || !description) return res.status(400).json({ error: 'Missing titre or description' });
 
+    const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+    if (!apiKey) {
+      console.error('OPENROUTER_API_KEY is not defined');
+      return res.status(500).json({ error: { message: 'OPENROUTER_API_KEY is missing on the server' } });
+    }
+
     const prompt = `Choisis UNE catégorie parmi: Pedagogie, Evenement, Vie de campus, Amelioration technique.\nTitre: ${titre}\nDescription: ${description}\nRéponds uniquement par la catégorie qui correspond à celle appropriée au titre et la description donnée.`;
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({ model: process.env.OPENROUTER_MODEL || 'mistralai/mistral-7b-instruct:free', stream: false, messages: [{ role: 'user', content: prompt }] })
     });
